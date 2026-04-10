@@ -1,0 +1,23 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${CLIENT_ID}
+            client-secret: ${CLIENT_SECRET}
+            scope:
+              - email
+              - profile
+
+  thymeleaf:
+    cache: false
+
+server:
+  port: 8080
+
+security:
+  level-mapping:
+    lorenzo@gmail.com: SECRET
+    teste@gmail.com: CONFIDENTIAL
+    # qualquer outro email não mapeado recebe PUBLIC por padrão

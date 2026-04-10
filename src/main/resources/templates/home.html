@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Bell-LaPadula · Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0a0c10;
+            --surface: #111318;
+            --surface2: #161920;
+            --border: #1e2229;
+            --border-light: #2a303a;
+            --text-primary: #e8eaf0;
+            --text-secondary: #7a8394;
+            --text-muted: #424a57;
+            --accent: #4f8ef7;
+            --accent-dim: rgba(79, 142, 247, 0.12);
+            --green: #3dd68c;
+            --green-dim: rgba(61, 214, 140, 0.12);
+            --red: #f76b6b;
+            --red-dim: rgba(247, 107, 107, 0.12);
+            --amber: #f5a623;
+            --amber-dim: rgba(245, 166, 35, 0.12);
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 48px 48px;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .layout {
+            position: relative;
+            z-index: 1;
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 40px 24px;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            gap: 16px;
+        }
+
+        .header-left {}
+
+        .system-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+        }
+
+        .logout-btn {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            text-decoration: none;
+            border: 1px solid var(--border-light);
+            padding: 8px 14px;
+            border-radius: 6px;
+            transition: color 0.15s, border-color 0.15s;
+            white-space: nowrap;
+        }
+
+        .logout-btn:hover { color: var(--text-primary); border-color: var(--text-muted); }
+
+        .user-card {
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 24px 28px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .level-badge {
+            flex-shrink: 0;
+            width: 56px;
+            height: 56px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .level-PUBLIC      { background: var(--green-dim); color: var(--green); border: 1px solid rgba(61,214,140,0.2); }
+        .level-CONFIDENTIAL { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,166,35,0.2); }
+        .level-SECRET      { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(247,107,107,0.2); }
+
+        .user-info {}
+        .user-name  { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+        .user-email { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+
+        .user-level-tag {
+            display: inline-block;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 4px;
+        }
+
+        .tag-PUBLIC       { background: var(--green-dim); color: var(--green); }
+        .tag-CONFIDENTIAL { background: var(--amber-dim); color: var(--amber); }
+        .tag-SECRET       { background: var(--red-dim);   color: var(--red);   }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+
+        .section {
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 20px 24px;
+        }
+
+        .section-title {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .perm-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .perm-row:last-child { border-bottom: none; }
+
+        .perm-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .level-dot {
+            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+        }
+        .dot-PUBLIC       { background: var(--green); }
+        .dot-CONFIDENTIAL { background: var(--amber); }
+        .dot-SECRET       { background: var(--red); }
+
+        .perm-actions { display: flex; gap: 6px; }
+
+        .perm-chip {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            padding: 3px 9px;
+            border-radius: 4px;
+        }
+
+        .chip-allow { background: var(--green-dim); color: var(--green); }
+        .chip-deny  { background: var(--red-dim);   color: var(--red);   }
+
+        .sim-section {
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+        }
+
+        .sim-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-top: 12px;
+        }
+
+        .sim-select {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--surface2);
+            border: 1px solid var(--border-light);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .sim-btn {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--accent-dim);
+            color: var(--accent);
+            border: 1px solid rgba(79,142,247,0.25);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+
+        .sim-btn:hover { background: rgba(79,142,247,0.2); }
+
+        .result-box {
+            margin-top: 16px;
+            padding: 16px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .result-allow { background: var(--green-dim); border: 1px solid rgba(61,214,140,0.2); }
+        .result-deny  { background: var(--red-dim);   border: 1px solid rgba(247,107,107,0.2); }
+
+        .result-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .result-allow .result-label { color: var(--green); }
+        .result-deny  .result-label { color: var(--red); }
+
+        .result-detail { color: var(--text-secondary); font-size: 13px; }
+
+        .rules-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .rule-chip {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 15px;
+            color: var(--text-secondary);
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            padding: 8px 14px;
+            border-radius: 6px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .rule-chip span { color: var(--accent); }
+    </style>
+</head>
+<body>
+<div class="layout">
+
+    <div class="header">
+        <div class="header-left">
+            <div class="system-label">Bell-LaPadula Access Control</div>
+            <h1>Painel de Segurança</h1>
+        </div>
+        <a href="/login" class="logout-btn">logout →</a>
+    </div>
+
+    <div class="user-card">
+        <div th:class="'level-badge level-' + ${user.securityLevel}" th:text="${user.securityLevel}"></div>
+        <div class="user-info">
+            <div class="user-name" th:text="${user.username}">Nome do Usuário</div>
+            <div class="user-email" th:text="${user.email}">email@gmail.com</div>
+            <span th:class="'user-level-tag tag-' + ${user.securityLevel}"
+                  th:text="'Nível: ' + ${user.securityLevel}">Nível</span>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="section">
+            <div class="section-title">Permissões de leitura · No-Read-Up</div>
+
+            <div class="perm-row">
+                <div class="perm-label">
+                    <span class="level-dot dot-PUBLIC"></span> PUBLIC
+                </div>
+                <div class="perm-actions">
+                    <span th:class="${canReadPublic} ? 'perm-chip chip-allow' : 'perm-chip chip-deny'"
+                          th:text="${canReadPublic} ? 'PERMITIDO' : 'NEGADO'"></span>
+                </div>
+            </div>
+
+            <div class="perm-row">
+                <div class="perm-label">
+                    <span class="level-dot dot-CONFIDENTIAL"></span> CONFIDENTIAL
+                </div>
+                <div class="perm-actions">
+                    <span th:class="${canReadConfidential} ? 'perm-chip chip-allow' : 'perm-chip chip-deny'"
+                          th:text="${canReadConfidential} ? 'PERMITIDO' : 'NEGADO'"></span>
+                </div>
+            </div>
+
+            <div class="perm-row">
+                <div class="perm-label">
+                    <span class="level-dot dot-SECRET"></span> SECRET
+                </div>
+                <div class="perm-actions">
+                    <span th:class="${canReadSecret} ? 'perm-chip chip-allow' : 'perm-chip chip-deny'"
+                          th:text="${canReadSecret} ? 'PERMITIDO' : 'NEGADO'"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Permissões de escrita · No-Write-Down</div>
+
+            <div class="perm-row">
+                <div class="perm-label">
+                    <span class="level-dot dot-PUBLIC"></span> PUBLIC
+                </div>
+                <div class="perm-actions">
+                    <span th:class="${canWritePublic} ? 'perm-chip chip-allow' : 'perm-chip chip-deny'"
+                          th:text="${canWritePublic} ? 'PERMITIDO' : 'NEGADO'"></span>
+                </div>
+            </div>
+
+            <div class="perm-row">
+                <div class="perm-label">
+                    <span class="level-dot dot-CONFIDENTIAL"></span> CONFIDENTIAL
+                </div>
+                <div class="perm-actions">
+                    <span th:class="${canWriteConfidential} ? 'perm-chip chip-allow' : 'perm-chip chip-deny'"
+                          th:text="${canWriteConfidential} ? 'PERMITIDO' : 'NEGADO'"></span>
+                </div>
+            </div>
+
+            <div class="perm-row">
+                <div class="perm-label">
+                    <span class="level-dot dot-SECRET"></span> SECRET
+                </div>
+                <div class="perm-actions">
+                    <span th:class="${canWriteSecret} ? 'perm-chip chip-allow' : 'perm-chip chip-deny'"
+                          th:text="${canWriteSecret} ? 'PERMITIDO' : 'NEGADO'"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sim-section">
+        <div class="section-title">Simulador de acesso</div>
+        <div class="sim-form">
+            <form method="get" action="/access-check" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+                <select name="action" class="sim-select">
+                    <option value="read">Ler recurso</option>
+                    <option value="write">Escrever em recurso</option>
+                </select>
+                <select name="level" class="sim-select">
+                    <option value="PUBLIC">PUBLIC</option>
+                    <option value="CONFIDENTIAL">CONFIDENTIAL</option>
+                    <option value="SECRET">SECRET</option>
+                </select>
+                <button type="submit" class="sim-btn">Verificar →</button>
+            </form>
+        </div>
+
+        <div th:if="${result != null}"
+             th:class="${result} ? 'result-box result-allow' : 'result-box result-deny'">
+            <div class="result-label" th:text="${result} ? '✓ PERMITIDO' : '✗ NEGADO'"></div>
+            <div class="result-detail"
+                 th:text="${user.username} + ' tentou ' + ${action} + ' recurso ' + ${targetLevel} + ' · Regra: ' + ${rule}">
+            </div>
+        </div>
+    </div>
+
+    <div class="rules-bar">
+        <div class="rule-chip"><span>NRU</span> · Leitura permitida apenas em níveis ≤ ao seu</div>
+        <div class="rule-chip"><span>NWD</span> · Escrita permitida apenas em níveis ≥ ao seu</div>
+    </div>
+
+</div>
+</body>
+</html>
