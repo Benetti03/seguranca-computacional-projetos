@@ -13,11 +13,21 @@ spring:
   thymeleaf:
     cache: false
 
+  session:
+    timeout: 1h
+    cookie:
+      http-only: true
+      secure: false
+      same-site: lax
+
 server:
   port: 8080
+
+app:
+  session:
+    timeout-seconds: 3600
 
 security:
   level-mapping:
     lorenzo@gmail.com: SECRET
     teste@gmail.com: CONFIDENTIAL
-    # qualquer outro email não mapeado recebe PUBLIC por padrão
