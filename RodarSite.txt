@@ -1,0 +1,11 @@
+Acessar o site pelo link abaixo:
+#Link para rodar o Bell LaPadula e códigos anteriores
+
+http://localhost:8080
+
+#Testar pelo postman ou testar pelo próprio navegador
+
+http://localhost:8080/api/users
+http://localhost:8080/api/users/email?value=nossoemail@gmail.com
+http://localhost:8080/api/users/role?value=PUBLIC                    --ou CONFIDENTIAL ou SECRET
+http://localhost:8080/api/users/search?nome=Lorenzo                 
